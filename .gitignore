@@ -1,0 +1,7 @@
+build/
+*.db
+*.o
+*.exe
+*.user
+moc_*.cpp
+qrc_*.cpp
