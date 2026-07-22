@@ -2,7 +2,6 @@
 
 #include <QSqlQuery>
 #include <QSqlError>
-#include <QCoreApplication>
 #include <QDir>
 #include <QDateTime>
 #include <QDebug>
@@ -20,8 +19,7 @@ DatabaseManager::~DatabaseManager()
 
 bool DatabaseManager::initialize()
 {
-    QString dataPath = QCoreApplication::applicationDirPath();
-    QString dbPath = dataPath + "/clipboard_history.db";
+    QString dbPath = QDir::currentPath() + "/clipboard_history.db";
 
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(dbPath);
@@ -58,7 +56,7 @@ bool DatabaseManager::createTable()
 qint64 DatabaseManager::addItem(const ClipboardItem &item)
 {
     if (itemExists(item.contentHash))
-        return -1;
+        return 0;
 
     QSqlQuery query(m_db);
     query.prepare(
@@ -207,7 +205,7 @@ int DatabaseManager::cleanupOldItems()
     query.prepare(
         "DELETE FROM clipboard_history "
         "WHERE is_favorite = 0 "
-        "AND created_at < datetime('now', '-1 day')"
+        "AND created_at < strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime', '-1 day')"
     );
     if (query.exec())
         return query.numRowsAffected();

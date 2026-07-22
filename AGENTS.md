@@ -29,6 +29,7 @@ cmake --build build -j$(nproc)
 
 ### 数据层约定
 - 数据库使用 SQLite，通过 Qt SQL 模块访问
+- 数据库文件 `clipboard_history.db` 存放在程序运行的当前工作目录（项目根目录，与 `README.md` 同级）
 - `ClipboardItem` 为纯数据结构（POD），定义在 `ClipboardItem.h`
 - `DatabaseManager` 封装所有 CRUD 操作，包括 `cleanupOldItems()` 清理过期记录
 - `ClipboardMonitor` 通过信号 `newItem` 通知上层

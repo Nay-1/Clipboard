@@ -8,6 +8,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Gui)
+find_package(X11 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
 
 set(SOURCES
     src/main.cpp
@@ -45,6 +48,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Sql
     Qt6::Gui
+    X11::X11
+    PkgConfig::XCB
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

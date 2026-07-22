@@ -60,6 +60,9 @@ cmake --build build -j$(nproc)
 ```
 Clipboard/
 ├── CMakeLists.txt               # CMake 构建配置
+├── README.md
+├── AGENTS.md
+├── clipboard_history.db         # 数据库（运行时在当前工作目录自动生成）
 ├── resources/
 │   └── resources.qrc            # Qt 资源文件
 ├── src/
@@ -76,8 +79,7 @@ Clipboard/
 │   └── utils/
 │       └── HotkeyManager.h/cpp  # 全局快捷键
 └── build/
-    ├── ClipboardHistory         # 可执行文件
-    └── clipboard_history.db     # 数据库（自动生成）
+    └── ClipboardHistory         # 可执行文件
 ```
 
 ## 数据保留策略
@@ -88,7 +90,7 @@ Clipboard/
 
 ## 数据存储
 
-SQLite 数据库文件 `clipboard_history.db` 生成在可执行文件同目录下。表结构：
+SQLite 数据库文件 `clipboard_history.db` 生成在程序运行的**当前工作目录**下（即项目根目录，与 `README.md` 同级）。表结构：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|

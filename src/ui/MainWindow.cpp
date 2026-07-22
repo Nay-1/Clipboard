@@ -197,7 +197,6 @@ void MainWindow::setupUI()
     mainLayout->addLayout(statusLayout);
 
     setAttribute(Qt::WA_DeleteOnClose, false);
-    setWindowFlags(Qt::WindowStaysOnTopHint);
 }
 
 void MainWindow::setupTray()
@@ -263,8 +262,6 @@ void MainWindow::setupConnections()
     connect(m_searchEdit, &QLineEdit::textChanged,
             this, &MainWindow::onSearchTextChanged);
 
-    connect(m_listView, &QListView::clicked,
-            this, &MainWindow::onItemClicked);
     connect(m_listView, &QListView::doubleClicked,
             this, &MainWindow::onItemDoubleClicked);
     connect(m_listView, &QListView::customContextMenuRequested,
@@ -289,16 +286,34 @@ void MainWindow::setupConnections()
             m_listView->setCurrentIndex(m_model->index(row + 1));
     });
 
-    m_pinBtn->hide();
+    connect(m_pinBtn, &QPushButton::toggled, this, [this](bool checked) {
+        setWindowFlag(Qt::WindowStaysOnTopHint, checked);
+        show();
+    });
 }
 
 void MainWindow::loadHistory()
 {
+    qint64 currentId = -1;
+    QModelIndex cur = m_listView->currentIndex();
+    if (cur.isValid())
+        currentId = m_model->getItem(cur.row()).id;
+
     auto items = m_db->getAllItems();
     m_model->setItems(items);
     m_infoLabel->setText(QString("%1 \u6761\u8BB0\u5F55").arg(items.size()));
-    if (!items.isEmpty())
-        m_listView->setCurrentIndex(m_model->index(0));
+
+    if (items.isEmpty())
+        return;
+
+    int row = 0;
+    for (int i = 0; i < items.size(); ++i) {
+        if (items[i].id == currentId) {
+            row = i;
+            break;
+        }
+    }
+    m_listView->setCurrentIndex(m_model->index(row));
 }
 
 void MainWindow::showWindow()
@@ -320,7 +335,10 @@ void MainWindow::hideWindow()
 void MainWindow::onNewClipboardItem(const ClipboardItem &item)
 {
     qint64 id = m_db->addItem(item);
-    if (id > 0) {
+    if (id <= 0)
+        return;
+
+    if (m_searchEdit->text().isEmpty()) {
         ClipboardItem saved = item;
         saved.id = id;
         m_model->prependItem(saved);
@@ -397,7 +415,9 @@ void MainWindow::onContextMenu(const QPoint &pos)
         m_db->toggleFavorite(item.id);
         item.isFavorite = !item.isFavorite;
         m_model->updateItem(item);
-        loadHistory();
+        auto idx = m_listView->currentIndex();
+        if (idx.isValid())
+            onItemClicked(idx);
     } else if (selected == delAct) {
         m_db->removeItem(item.id);
         m_model->removeItem(item.id);

@@ -5,6 +5,8 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QApplication>
+#include <QTextLayout>
+#include <QTextLine>
 
 static QColor SELECTED_BG("#E8F0FE");
 static QColor SELECTED_BORDER("#D0DDF5");
@@ -93,19 +95,29 @@ void HistoryListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     if (type == ClipboardItem::Text) {
         QString display = text.simplified();
         display.replace('\n', ' ');
-        QString truncated = fm.elidedText(display, Qt::ElideRight, tw);
-        painter->setPen(TEXT_COLOR);
-        painter->drawText(QRect(tx, textTop, tw, fm.height()), Qt::AlignLeft | Qt::AlignVCenter, truncated);
 
-        if (textH > fm.height() * 2 + 4) {
-            QString more = display.mid(fm.elidedText(display, Qt::ElideRight, tw).length()).simplified();
-            if (!more.isEmpty()) {
-                more = fm.elidedText(more, Qt::ElideRight, tw);
+        int lineH = fm.height();
+        painter->setPen(TEXT_COLOR);
+
+        QTextLayout layout(display, tf);
+        layout.beginLayout();
+        QTextLine line1 = layout.createLine();
+        if (line1.isValid()) {
+            line1.setLineWidth(tw);
+            int firstLen = line1.textLength();
+            QString firstText = fm.elidedText(display.left(firstLen), Qt::ElideRight, tw);
+            painter->drawText(QRect(tx, textTop, tw, lineH),
+                              Qt::AlignLeft | Qt::AlignVCenter, firstText);
+
+            if (textH > lineH * 2 + 4 && firstLen < display.length()) {
+                QString remaining = display.mid(firstLen);
+                QString secondText = fm.elidedText(remaining, Qt::ElideRight, tw);
                 painter->setPen(SECONDARY_COLOR);
-                painter->drawText(QRect(tx, textTop + fm.height() + 2, tw, fm.height()),
-                                  Qt::AlignLeft | Qt::AlignVCenter, more);
+                painter->drawText(QRect(tx, textTop + lineH + 2, tw, lineH),
+                                  Qt::AlignLeft | Qt::AlignVCenter, secondText);
             }
         }
+        layout.endLayout();
     } else {
         QString desc = text.isEmpty() ? QStringLiteral("[图片]") : text;
         QString truncated = fm.elidedText(desc, Qt::ElideRight, tw);
@@ -156,28 +168,4 @@ QPixmap HistoryListDelegate::createRoundedPixmap(const QPixmap &src, int radius)
     p.end();
 
     return rounded;
-}
-
-QString HistoryListDelegate::truncateText(const QString &text, int maxLines,
-                                           const QFontMetrics &fm, int width)
-{
-    QString result;
-    int lines = 0;
-    QString remaining = text;
-
-    while (!remaining.isEmpty() && lines < maxLines) {
-        QString elided = fm.elidedText(remaining, Qt::ElideRight, width);
-        if (!result.isEmpty()) result += '\n';
-        result += elided;
-        if (elided != remaining) break;
-
-        int nl = remaining.indexOf('\n');
-        if (nl >= 0)
-            remaining = remaining.mid(nl + 1);
-        else
-            remaining.clear();
-
-        lines++;
-    }
-    return result;
 }

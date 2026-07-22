@@ -14,6 +14,4 @@ public:
 
 private:
     static QPixmap createRoundedPixmap(const QPixmap &src, int radius);
-    static QString truncateText(const QString &text, int maxLines,
-                                 const QFontMetrics &fm, int width);
 };
