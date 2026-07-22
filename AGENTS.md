@@ -30,8 +30,10 @@ cmake --build build -j$(nproc)
 ### 数据层约定
 - 数据库使用 SQLite，通过 Qt SQL 模块访问
 - `ClipboardItem` 为纯数据结构（POD），定义在 `ClipboardItem.h`
-- `DatabaseManager` 封装所有 CRUD 操作
+- `DatabaseManager` 封装所有 CRUD 操作，包括 `cleanupOldItems()` 清理过期记录
 - `ClipboardMonitor` 通过信号 `newItem` 通知上层
+- 自动清理规则：非收藏记录超过 24 小时删除，取消收藏时 `created_at` 重置为当前时间重新计时
+- 每小时通过 `QTimer` 执行一次 `cleanupOldItems()`
 
 ### 命名规范
 - 源文件: `PascalCase`（如 `MainWindow.cpp`）
